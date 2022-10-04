@@ -1,7 +1,9 @@
 from datetime import datetime
 import email
 from operator import imod
-from flask import Flask,render_template
+from pyexpat import model
+from statistics import mode
+from flask import Flask,render_template,flash
 from flask import request
 from forms import SignUpForm
 from flask_sqlalchemy import SQLAlchemy
@@ -44,9 +46,17 @@ def showSignup():
         _email = form.inputEmail.data
         _password = form.inputPassword.data
 
-        user = {'fname':_fname,'lname':_lname, 'email':_email, 'password':_password}
-        return render_template('signUpSuccess.html', user = user)
-        
+        #user = {'fname':_fname,'lname':_lname, 'email':_email, 'password':_password}
+        if(db.session.query(models.User).filter_by(email=_email).count() == 0):
+            user = models.User(first_name = _fname, last_name = _lname, email = _email)
+            user.set_password(_password)
+            db.session.add(user)
+            db.session.commit()
+            return render_template('signUpSuccess.html', user = user)
+        else:
+            flash('Email {} is already exsists!'.format(_email))
+            return render_template('signup.html', form = form)
+
     #return render_template('signup.html')
     return render_template('signup.html', form = form)
         
